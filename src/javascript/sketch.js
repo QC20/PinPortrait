@@ -16,7 +16,6 @@ let nrOfCubesX;
 let nrOfCubesY;
 
 function setup() {
-  console.log("Setting up...");
   setupColors();
   setupScene();  
   setupRenderer();
@@ -32,7 +31,6 @@ function setup() {
     setupCamera();
     setupCubes();
     setupLights();
-    console.log("Setup complete. Starting draw loop.");
     draw();
   });
 }
@@ -47,7 +45,6 @@ function reset() {
   h = canvas.height = video.videoHeight;
   nrOfCubesX = w / size;
   nrOfCubesY = h / size;
-  console.log(`Video dimensions: ${w}x${h}, Cubes: ${nrOfCubesX}x${nrOfCubesY}`);
 }
 
 function setupWebCamera() {
@@ -124,7 +121,6 @@ function setupCubes() {
       cubes.push(cube);
     }
   }
-  console.log(`Created ${cubes.length} cubes`);
 }
 
 function setupLights() {
