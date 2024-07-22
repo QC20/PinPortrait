@@ -2,6 +2,11 @@
 
 PinPortrait is an interactive web experiment that transforms your webcam feed into a dynamic 3D pixel art portrait. This project explores the intersection of computer vision, 3D graphics, and interactive design, offering a unique and engaging user experience.
 
+<div align="center">
+  <img src="./src/assets/gif/example.gif" alt="">
+  <p></p>
+</div>
+
 ## Features
 
 - Real-time webcam input processing
