@@ -147,7 +147,8 @@
             cubes.forEach(cube => {
                 let x = cube.position.x;
                 let y = cube.position.y;
-                let col = getAverage(pixels, w-x*size, h-y*size);
+                // Fix: Use x*size directly instead of w-x*size
+                let col = getAverage(pixels, x*size, h-y*size);
                 let c = Math.round(col);
                 cube.material.color = colors.get(c);
                 let z = col/10 + 0.01;
@@ -155,24 +156,28 @@
                 cube.position.z = z / 2; 
             });
         }
-
+        
         function getAverage(pixels, x0, y0) {
             let r = 0;
             let g = 0;
             let b = 0;
-
-            for(let x = x0; x < x0 + size; x += 1) {
-                for(let y = y0; y < y0 + size; y += 1) {
+            
+            // Add bounds checking to prevent out-of-bounds access
+            for(let x = x0; x < Math.min(x0 + size, w); x += 1) {
+                for(let y = y0; y < Math.min(y0 + size, h); y += 1) {
                     let index = (x + w*y) * 4;
-                    r += pixels[index];
-                    g += pixels[index + 1];
-                    b += pixels[index + 2];
+                    // Only process if within bounds
+                    if (index >= 0 && index < pixels.length - 2) {
+                        r += pixels[index];
+                        g += pixels[index + 1];
+                        b += pixels[index + 2];
+                    }
                 }
             }
-            let val = (0.2126*r + 0.7152*g + 0.0722*b)/(size*size)
+            let val = (0.2126*r + 0.7152*g + 0.0722*b)/(size*size);
             return isNaN(val) ? 1 : val;
         }
-
+        
         function setupEventListeners() {
             window.addEventListener("resize", onWindowResize);
         }
