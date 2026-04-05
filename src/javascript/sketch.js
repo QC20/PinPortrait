@@ -255,12 +255,18 @@ function setupInstancedMesh() {
 // Lights
 // ============================================================
 function setupLights() {
-    scene.add(new THREE.AmbientLight(0x777777));
+    // Soft fill from all directions
+    scene.add(new THREE.AmbientLight(0xaaaaaa));
 
-    const spot = new THREE.SpotLight(0xbbbbbb);
-    spot.position.set(0, nrOfCubesY, 100);
-    spot.castShadow = true;
-    scene.add(spot);
+    // Even directional light from front-above, no cone falloff
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(0.5, 1, 2).normalize();
+    scene.add(dirLight);
+
+    // Subtle back light to keep edge cubes from going fully flat
+    const backLight = new THREE.DirectionalLight(0x444444, 0.4);
+    backLight.position.set(-0.5, -1, -1).normalize();
+    scene.add(backLight);
 }
 
 
