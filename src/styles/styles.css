@@ -1,10 +1,152 @@
+/* ============================================================
+   Base
+   ============================================================ */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 body, html {
-  margin: 0;
-  overflow: hidden;
+    margin: 0;
+    overflow: hidden;
+    background: #000;
+    font-family: 'Courier New', Courier, monospace;
 }
-canvas {
-  display: block;
-}
+
+/* Hidden sampling canvas and video source */
+#canvas,
 video {
-  display: none;
+    display: none;
+}
+
+
+/* ============================================================
+   HUD - top-left stats
+   ============================================================ */
+#hud {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#hud span {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.55);
+    text-transform: uppercase;
+}
+
+
+/* ============================================================
+   Key hints - bottom center
+   ============================================================ */
+#hints {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    pointer-events: none;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.3);
+    white-space: nowrap;
+}
+
+#hints kbd {
+    display: inline-block;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 3px;
+    padding: 0 5px;
+    font-family: inherit;
+    font-size: 10px;
+    line-height: 16px;
+    color: rgba(255, 255, 255, 0.45);
+    margin: 0 1px;
+}
+
+
+/* ============================================================
+   Screenshot flash
+   ============================================================ */
+#flash {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   Webcam error overlay (Feature 10)
+   ============================================================ */
+#error-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.88);
+    align-items: center;
+    justify-content: center;
+}
+
+#error-box {
+    background: #111;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    padding: 40px 48px;
+    text-align: center;
+    color: #fff;
+    max-width: 380px;
+    width: 90%;
+}
+
+#error-icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+}
+
+#error-box h2 {
+    margin: 0 0 10px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+#error-box p {
+    margin: 0 0 28px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.45);
+    line-height: 1.6;
+}
+
+#retry-btn {
+    background: #fff;
+    color: #000;
+    border: none;
+    padding: 10px 32px;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+#retry-btn:hover {
+    background: #ddd;
+}
+
+#retry-btn:active {
+    transform: scale(0.97);
 }
