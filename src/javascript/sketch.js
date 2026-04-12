@@ -1,7 +1,7 @@
 // ============================================================
 // Constants
 // ============================================================
-const SIZE_MIN      = 4;
+const SIZE_MIN      = 2;
 const SIZE_MAX      = 32;
 const SIZE_STEP     = 2;
 const THRESH_MIN    = 0;
@@ -51,7 +51,7 @@ let hudFps, hudSize, hudThreshold, flashEl;
 // Entry point
 // ============================================================
 function setup() {
-    dummy       = new THREE.Object3D();
+    dummy        = new THREE.Object3D();
     colorScratch = new THREE.Color();
 
     cacheDOMRefs();
@@ -66,7 +66,6 @@ function setup() {
             reset();
             setupCamera();
             setupInstancedMesh();
-            setupLights();
             startLoop();
         })
         .catch(showWebcamError);
@@ -115,7 +114,7 @@ function setupWebCamera() {
         navigator.mediaDevices
             .getUserMedia({ audio: false, video: true })
             .then(stream => {
-                video          = document.querySelector('video');
+                video           = document.querySelector('video');
                 video.srcObject = stream;
                 video.onloadedmetadata = () => {
                     video.play();
@@ -173,7 +172,7 @@ function setupScene() {
 // ============================================================
 function setupRenderer() {
     renderer = new THREE.WebGLRenderer({
-        antialias:            true,
+        antialias:             true,
         preserveDrawingBuffer: true   // required for toDataURL screenshot
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -206,10 +205,12 @@ function repositionCamera() {
 
 
 // ============================================================
-// Instanced mesh (Feature 3: single draw call instead of N)
+// Instanced mesh
+// MeshBasicMaterial is used intentionally: it ignores all
+// lighting, so cube color is purely driven by webcam brightness
+// with no angular shading artifacts from light direction.
 // ============================================================
 function setupInstancedMesh() {
-    // Dispose of old mesh if rebuilding after a size change
     if (instancedMesh) {
         scene.remove(instancedMesh);
         instancedMesh.geometry.dispose();
@@ -217,17 +218,15 @@ function setupInstancedMesh() {
         instancedMesh = null;
     }
 
-    // Allocate lerp buffers
     currentZ = new Float32Array(totalCubes).fill(0.1);
     targetZ  = new Float32Array(totalCubes).fill(0.1);
 
     const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshStandardMaterial({ roughness: 0.5 });
+    const material = new THREE.MeshBasicMaterial();
 
     instancedMesh = new THREE.InstancedMesh(geometry, material, totalCubes);
     instancedMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 
-    // Place cubes at default positions
     let i = 0;
     for (let x = 0; x < nrOfCubesX; x++) {
         for (let y = 0; y < nrOfCubesY; y++) {
@@ -252,26 +251,7 @@ function setupInstancedMesh() {
 
 
 // ============================================================
-// Lights
-// ============================================================
-function setupLights() {
-    // Soft fill from all directions
-    scene.add(new THREE.AmbientLight(0xaaaaaa));
-
-    // Even directional light from front-above, no cone falloff
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(0.5, 1, 2).normalize();
-    scene.add(dirLight);
-
-    // Subtle back light to keep edge cubes from going fully flat
-    const backLight = new THREE.DirectionalLight(0x444444, 0.4);
-    backLight.position.set(-0.5, -1, -1).normalize();
-    scene.add(backLight);
-}
-
-
-// ============================================================
-// Rebuild after pixel size change (Feature 2)
+// Rebuild after pixel size change
 // ============================================================
 function rebuildGrid() {
     reset();
@@ -294,7 +274,6 @@ function startLoop() {
 function draw(timestamp) {
     requestAnimationFrame(draw);
 
-    // FPS counter
     if (lastTs > 0) {
         fps = Math.round(1000 / (timestamp - lastTs));
     }
@@ -318,32 +297,26 @@ function pixelate() {
     for (let x = 0; x < nrOfCubesX; x++) {
         for (let y = 0; y < nrOfCubesY; y++) {
 
-            // BUG FIX: mirror x correctly, fix y off-by-one
-            // Original: w - x*size  (out of bounds at x=0)
-            // Fixed:    (nrOfCubesX-1-x)*size  (maps x=0 to rightmost block)
-            // Original: h - y*size  (out of bounds at y=0)
-            // Fixed:    h - (y+1)*size  (maps y=0 to bottom block)
+            // Corrected sampling: mirrors x, fixes y off-by-one
             const brightness = getAverage(
                 pixels,
                 (nrOfCubesX - 1 - x) * size,
                 h - (y + 1) * size
             );
 
-            // Feature 7: brightness threshold - cubes below it stay flat
+            // Threshold: cubes below it stay flat
             const effective = brightness < threshold ? 0 : brightness;
 
-            // Feature 4: lerp toward target z instead of snapping
+            // Lerp toward target z for smooth ripple effect
             targetZ[i]   = effective / 10 + 0.01;
             currentZ[i] += (targetZ[i] - currentZ[i]) * LERP_FACTOR;
             const z = currentZ[i];
 
-            // Update instance transform
             dummy.position.set(x, y, z / 2);
             dummy.scale.set(1, 1, z);
             dummy.updateMatrix();
             instancedMesh.setMatrixAt(i, dummy.matrix);
 
-            // Update instance color (grayscale)
             const c = Math.max(0, Math.min(255, Math.round(brightness)));
             instancedMesh.setColorAt(i, colors.get(c));
 
@@ -380,10 +353,9 @@ function getAverage(pixels, x0, y0) {
 
 
 // ============================================================
-// Screenshot (Feature 9)
+// Screenshot
 // ============================================================
 function takeScreenshot() {
-    // Re-render to ensure the latest frame is in the buffer
     renderer.render(scene, camera);
 
     const url = renderer.domElement.toDataURL('image/png');
@@ -392,7 +364,6 @@ function takeScreenshot() {
     a.download = `pinportrait-${Date.now()}.png`;
     a.click();
 
-    // Brief white flash for feedback
     flashEl.style.opacity    = '0.6';
     flashEl.style.transition = 'none';
     requestAnimationFrame(() => {
@@ -418,7 +389,6 @@ function onWindowResize() {
 
 function onKeyDown(e) {
     switch (e.key) {
-        // Feature 2: pixel size control
         case '+':
         case '=':
             if (size < SIZE_MAX) {
@@ -432,8 +402,6 @@ function onKeyDown(e) {
                 rebuildGrid();
             }
             break;
-
-        // Feature 7: threshold control
         case ']':
             threshold = Math.min(THRESH_MAX, threshold + THRESH_STEP);
             updateHUD();
@@ -442,8 +410,6 @@ function onKeyDown(e) {
             threshold = Math.max(THRESH_MIN, threshold - THRESH_STEP);
             updateHUD();
             break;
-
-        // Feature 9: screenshot
         case 's':
         case 'S':
             takeScreenshot();
